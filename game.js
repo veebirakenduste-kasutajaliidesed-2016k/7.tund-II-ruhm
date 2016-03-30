@@ -16,6 +16,8 @@
 
      this.online = null;
      this.status = null;
+	 
+	 this.phone = null;
 
      this.init();
    };
@@ -27,7 +29,70 @@
      init: function(){
 
         console.log('started');
+		
+		this.askPhone();
+		
+		this.serveQuestion();
      },
+	 serveQuestion: function(){
+		
+		//kui ei ole internetti
+		if(!navigator.onLine){
+			window.setTimeout(function(){
+				Game.instance.serveQuestion();
+			}, 100);
+			return;
+		}
+		
+		//internet oli
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function() {
+			if (xhttp.readyState == 4 && xhttp.status == 200) {
+				
+				var question = JSON.parse(xhttp.responseText);
+				console.log(question);
+				
+				//if(!question.id)
+				if(typeof question.id === "undefined"){
+					//id'd ei olnud
+					console.log("Küsimust ei olnud");
+					window.setTimeout(function(){
+						Game.instance.serveQuestion();
+					}, 1000);
+				}else{
+					alert(question.q);
+				}
+			
+			}
+		};
+		xhttp.open("GET", "questions.txt", true);
+		xhttp.send();
+		
+		
+		
+		
+	 },
+	 askPhone: function(){
+		 
+		//kui localStorage'is olemas siis laen sealt
+		if(localStorage.getItem("phone")){
+			this.phone = localStorage.getItem("phone");
+			return;
+		}
+		 
+		 
+		var p = prompt("Palun sisesta on tel nr:");
+		
+		if(p){
+			//prompt ei olnud tühi, ega cancel nupp
+			localStorage.setItem("phone", p);
+			this.phone = p;
+		}else{
+			this.askPhone();
+		}
+		
+		 
+	 },
      startCacheListeners: function(){
          this.cache.addEventListener('cached', this.logEvent.bind(this), false);
          this.cache.addEventListener('checking', this.logEvent.bind(this), false);
@@ -40,6 +105,7 @@
 
          window.applicationCache.addEventListener('updateready',function(){
              window.applicationCache.swapCache();
+			 
              //console.log('swap cache has been called');
          },false);
 
